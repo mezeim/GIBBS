@@ -1,0 +1,372 @@
+<HTML>
+<BODY BGCOLOR="#FFFFFF">
+<P>
+<H2><CENTER>Description of the program Gibbs: Calculation of
+liquid phase equilibria
+with the cavity-biased Gibbs ensemble method.</CENTER></H2>
+<p>
+<CENTER>Molec. Simulation, Vol 9, pp 257-267 (1992)</CENTER>
+<p>
+<H1><CENTER>Mihaly Mezei</CENTER></H1>
+<p>
+<CENTER>Department of Pharmacological Sciences,</CENTER>
+<p>
+<CENTER> Icahn School of Medicine at Mount Sinai</CENTER>
+<p>
+<CENTER>New York, NY 10029</CENTER>
+<p>
+<CENTER><A HREF="mailto:Mihaly.Mezei@mssm.edu">Mihaly.Mezei@mssm.edu
+</A></CENTER>
+<p>
+<CENTER>July 4, 2005.</CENTER>
+<p>
+<TABLE NOBORDER>
+<TR><TD ALIGN=LEFT>I. </TD><TD ALIGN=LEFT><A HREF="#I">General
+description</A></TD></TR><BR>
+<TR><TD ALIGN=LEFT>II. </TD><TD ALIGN=LEFT><A HREF="#II">Installation
+</A></TD></TR><BR>
+<TR><TD ALIGN=LEFT>III. </TD><TD ALIGN=LEFT><A HREF="#III">Input
+syntax</A></TD></TR><BR>
+<TR><TD ALIGN=LEFT>IV. </TD><TD ALIGN=LEFT><A HREF="#IV">Sample
+input</A></TD></TR><BR>
+<TR><TD ALIGN=LEFT>V. </TD><TD ALIGN=LEFT><A HREF="#V">File
+formats</A></TD></TR><BR>
+<TR><TD ALIGN=LEFT>VI. </TD><TD ALIGN=LEFT><A HREF="#VI">References
+</A></TD></TR><BR>
+</TABLE>
+<p>
+<A NAME="I">I.</A> <u>General Description</u>
+<p>
+The program calculates phase equilibria of a one-component molecular fluid
+by simulating the system in the Gibbs ensemble of
+Panagiotpoulus <A HREF="#GE">REF</A>.
+In the Gibbs ensemble, two copies of the system are simulated in 
+equilibrium with each other. 
+The equilibrium is obtained by periodic attempt to transfer 
+either some volume or a molecule  from one system to an other.
+Such exchanges are accepted usiong rules similar to those used in 
+(T,P,N) or (T,V,mu) ensemble simulations, respectively.
+<p>
+The transfer of molecules into a liquid is facilitated by the cavity-biasig
+of Mezei <A HREF="#CBG">REF</A>, originally introduced for simulations
+in the grand-canonical ensemble <A HREF="#CB">REF</A>.
+<p>
+The program can also be used for the simulation of two (T,P,N) or
+(T,V,mu) ensemble fluids.
+<p>
+The molecules are assumed to be rigid. They can interact with a 
+combination of Lennard-Jones and electrostatic terms.
+The long-range contributions (that are of greater significance here 
+than for constant N simulations)
+can be estimated by the reaction field method for the electrostatic
+part and using the formula of Mezei &amp; Bencsath
+for the Lennard-Jones part <A HREF="#KBMM">REF</A>.
+<p>
+<A NAME="II">II.</A> <u>Installation</u>
+<p>
+The program is written in standard Fortran-77. Before compilation, 
+certain symbols have to be changed in the source file <b>gibbs.for</b>.
+These symbols determine the maximum dimensions of arrays used.
+<UL>
+<LI>  change '#IJ' to '&lt;(maxmol-1)*maxmol/2&gt;' 
+<LI>  change '#MO' to '&lt;maxmol&gt;'
+(limits <A HREF="#NMOLEC"><b>nmmg</b> and <b>nmmr</b></A>)
+<LI>  change '#NA' to '&lt;maxslv*maxmol&gt;' 
+<LI>  change '#RG' to '&lt;maximumn number of rdf grids&gt;' 
+(limits <A HREF="#NSLV"><b>nrgrid</b></A>)
+<LI>  change '#SV' to '&lt;maxslv&gt;' 
+(limits <A HREF="#NSLV"><b>nslv</b></A>)
+<LI>  change '#CV' to '&lt;maximum number of cavities&gt;' 
+<LI>  change '#GX' to '&lt;maximum number of
+(limits <A HREF="#NRDF"><b>ngrid</b></A>)
+cavity grids in each direction&gt;' 
+</UL>
+<p>
+Furthermore, certain platform-dependent lines
+may have to be uncommented as follows:
+<UL>
+<LI>For IBM VM/MVS systems, change 'C@BM' to ''
+<LI>For VAX/VMS systems, change 'C@VX' to ''
+<LI>For Cray, change 'C@RY' to ''
+</UL>
+<p>
+There is a c-shell script <b>pre.csh</b> that performs the dimension-related
+substitution. It can be edited to accomodated
+the system to be simulated.
+<p>
+<A NAME="III">II.</A> <u>Input syntax</u>
+<p>
+The endings G and R in the variable names refer to the grid or
+random insertion.
+Grid insertion is done in the liquid and random insertion in the vapor phase.
+For some quantities, zero input will result in using default values,
+shown below enclosed between braces.
+<OL>
+<A NAME = "I1"></A>
+<LI>Option array : <b>iop</b> (40i2)
+<UL>
+<LI>iop(1)  = 1 : create inital configuration
+<LI>iop(1)  = 2 : input from unit 13, but update number of molecules
+<LI>iop(2)  = 0 : apply volume change to the R system
+<LI>iop(2)  = 1 : apply volume change to the G system
+<LI>iop(3)  = 0 : Gibbs ensemble simulation
+<LI>iop(3)  = 1 : two (T,P,N) ensemble simulations
+<LI>iop(3)  = 2 : two (T,P,mu) ensemble simulations
+<LI>iop(4)  = 0 : binary input on unit 13
+<LI>iop(4)  = 1 : alphanumeric input on unit 13
+<LI>iop(6)  = 0 : no particle exchange
+<LI>iop(6)  = 1 : use random insertion
+<LI>iop(6)  = 2 : use cavity-biased insertion
+<LI>iop(8)  = 0 : don't use the long-range correction
+<LI>iop(8)  = 1 : use the long-range correction
+<LI>iop(9)  = 0 : spherical cut-off for the electrostatic interactions
+<LI>iop(9)  = 1 : reaction field correction with eps(rf)=infinity   
+(applicable only if iop(11)=6)
+<LI>iop(10) &gt; 0 : restart, input from unit 10
+<LI>iop(11) = 0 : MCY water
+<LI>iop(11) = 1 : ST2 water
+<LI>iop(11) = 2 : SPC/TIPS water
+<LI>iop(11) = 3 : TIPS2/TIPS4P water
+<LI>iop(11) = 4 : LJ fluid
+<LI>iop(11) = 5 : general 12-6 (LJ) molecule
+<LI>iop(11) = 6 : general 12-6-1 molecule
+<LI>iop(12) = 0 : com synchronization at 10<sup>5</sup>th MC step
+<LI>iop(12) &gt; 0 : com synchronization at 10<sup>(iop12-1)</sup>-th MC step
+<LI>iop(13) &gt; 0 : echo inputted data
+<LI>iop(15) &gt; 0 : save initial config on unit 13 and restart
+<LI>iop(15) = 2 : save initial config on unit 13 in alphanum and restart
+<LI>iop(16) &gt; 0 : create two free-format coordinate file and stop
+<LI>iop(17) &gt; 0 : calculate g(r) and angular correlations for the G system
+<LI>iop(17) &gt; 1 : calculate g(r) and angular correlations for the R system
+<LI>iop(17) &gt; 2 : calculate the absolute value of the correlations
+</UL>
+<p>
+If iop(10) &gt; 0 (run continued from a checkpoint file), 
+<i>skip items 2-8</i>.
+<p>
+<A NAME = "I2"></A>
+<LI><b>id</b> (20a4/20a4)
+<UL>Verbal description of the run
+</UL>
+<A NAME="NRDF"></A>
+<LI><b>nrgrid</b>, <b>icolcr</b>, <b>rgrid</b>,
+<b>alj</b>, <b>blj</b> (2i5,3f20.0)
+<UL>
+<LI><b>nrgrid</b> {#RG}: number of rdf girdpoints (in each dimension)
+<LI><b>icolcr</b> {1}: the colum of the orientation matrix
+to use for correlation calc
+<LI><b>rgrid</b> {0.05}: radial gridsize in A
+<LI><b>alj</b>, <b>blj</b>: LJ parameters for TIPS/SPC type water models.
+</UL>
+<A NAME="NMOLEC"></A>
+<LI><b>nmmg</b>, <b>nmmr</b>, <b>temp</b>, <b>edgea</b>,
+<b>prsag</b>, <b>prsar</b> (2i5,4f15.5)
+<UL>
+<LI><b>nmmg</b>, <b>nmmr</b>: If nmmx&lt;nmolx, the balance is deleted;
+if nmmx&gt;nmolx, the balance of molecules is created randomly
+and the new configuration is saved on
+unit 13 and the calculation stops.
+Here nmolx is the number of molecules in the G and R systems as read from
+unit 13.
+<LI><b>temp</b>: the temperature.
+Unit: for LJ fluid reduced unit (i.e., kT/eps), otherwise Kelvin.
+<LI><b>edgea</b>: the cell size.
+Unit: for LJ fluid reduced unit (i.e., e/sigma), otherwise Angstrom.
+<LI><b>prsag</b>, <b>prsar</b>: When iop(3) &gt; 0 (i.e., two (T,P,N)
+simulations are run),
+the pressures in the G and R systems, respectively, in A.
+</UL>
+<A NAME = "I5"></A>
+<LI><b>cedgs</b>, <b>rotax</b>, <b>delvol</b> (20x,3f20.0)
+<UL>
+<LI><b>cedgs</b>: displacements along each coordinate axis will be limited
+to +/-<b>cedgs</b>/2
+<LI><b>rotax</b>: rotations will be limited to +/-<b>rotax</b>/2
+<LI><b>delvol</b>: volume changes will be limited to +/-<b>delvol</b>
+</UL>
+<A NAME="NSLV"></A>
+<LI><b>nslv</b>, <b>ngrid</b>, <b>cutof</b>, <b>rsph</b> (2i5,3f20.0)
+<UL>
+<LI><b>nslv</b>: the number of solvent atoms
+<LI><b>ngrid</b> {#GX}: number of cb grids
+<LI><b>cutof</b>: potential cutoff (in A)
+<LI><b>rsph</b>: the cavity diameter
+</UL>
+<A NAME = "I7"></A>
+<LI><b>nslv</b> records (one for each atom in the simulated molecule):
+<UL>
+<LI>If <b>iop(11)</b> &lt; 5 then
+<b>islv</b>, <b>x</b>, <b>y</b>, <b>z</b>, <b>q</b> (i5,3f15.10,3f10.0)
+<UL>
+<LI><b>islv</b>: atomic number 
+<LI><b>x</b>, <b>y</b>, <b>z</b>: coordinates of he atom in a local frame
+<LI><b>q</b>: partial charge
+</UL>
+<LI>If <b>iop(11)</b> &gt; 5 then
+<b>islv</b>, <b>x</b>, <b>y</b>, <b>z</b>, <b>q</b>,
+<b>sigma</b>, <b>eps</b> (i5,3f15.10,3f10.0)
+<UL>
+<LI><b>sigma</b>, <b>eps</b>: the LJ sigma (in A) and epsilon (in kcal/mol)
+</UL>
+</UL>
+<A NAME = "I8"></A>
+<LI><b>nmcmax</b>, <b>nmcrep</b>, <b>nrecd</b>, <b>nmcvch</b>, <b>nmccnt</b>
+(7i10)
+<UL>
+<LI><b>nmcmax</b>: number of MC steps to run 
+<LI><b>nmcrep</b>: one-line report frequency
+<LI><b>nrecd</b>: check-poinf file saving frequency
+<LI><b>nmcvch</b>: volume change attempt frequency
+<LI><b>nmccnt</b>: control function saving frequency
+</UL>
+<p>
+When iop(10)=0, the input <i>terminates</i> here.
+<p>
+<LI><b>nmcmax</b>, <b>nmcrep</b> (7i10)
+</OL>
+<p>
+<A NAME="IV">IV.</A> <u>Sample input</u>
+<p>
+The input for methylene fluoride <A HREF = "MEF2">REF</A> at T= 225 K
+is given below, first properly formatted and next with line-by-line annotations:
+<PRE>
+ 2 0 0 1 0 2 0 1 1 0 6 0 0 0 0 0 0
+ GIBBS   methylene fluoride at 225K
+ 10 million MC steps
+    0    0         0.0                0.0                0.0
+  511    2         225.0        32.50000
+             0.3                15.0                400.
+    5  100   15.                 3.0
+    6   0.00000         0.00000      0.00000         0.300     3.150   0.10844
+    1   0.91213         0.00000     -0.59676         0.075     2.170   0.01985
+    1  -0.91213         0.00000     -0.59676         0.075     2.170   0.01985
+    9   0.00000         1.10464      0.79333        -0.225     2.975   0.07944
+    9   0.00000        -1.10464      0.79333        -0.225     2.975   0.07944
+  10000000     10000    100000       500    50000
+</PRE>
+<OL>
+<LI>Option array: <A HREF="#I1"><b>iop</b></A><BR>
+ 2 0 0 1 0 2 0 1 1 0 6 0 0 0 0 0 0
+<LI><A HREF="#I2"><b>id</b></a><BR>
+ GIBBS   methylene fluoride at 225K<BR>
+ 10 million MC steps
+<LI><A HREF="#NRDF"><b>nrgrid</b>, <b>icolcr</b>, <b>rgrid</b>,
+<b>alj</b>, <b>blj</b></A><BR>
+ &nbsp; &nbsp;0 &nbsp; &nbsp;0 &nbsp; &nbsp; &nbsp; &nbsp; 0.0
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;0.0
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;0.0
+<LI><A HREF="#NMOLEC"><b>nmmg</b>, <b>nmmr</b>, <b>temp</b>, <b>edgea</b>,
+<b>prsag</b>, <b>prsar</b></A><BR>
+ &nbsp;511 &nbsp; &nbsp;2 &nbsp; &nbsp; &nbsp; &nbsp; 225.0
+&nbsp; &nbsp; &nbsp; &nbsp;32.50000
+<LI><A HREF="#I5"><b>cedgs</b>, <b>rotax</b>, <b>delvol</b></A><BR>
+ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 0.3
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 15.0
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;400.
+<LI><A HREF="#NSLV"><b>nslv</b>, <b>ngrid</b>, <b>cutof</b>, <b>rsph</b></A><BR>
+ &nbsp; &nbsp;5 &nbsp;100 &nbsp; 15.
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 3.0
+<LI><b>nslv</b> records (iop(11) &gt; 5):
+<A HREF="#I7"><b>islv</b>, <b>x</b>, <b>y</b>, <b>z</b>, <b>q</b>,
+<b>sigma</b>, <b>eps</b></A><BR>
+ &nbsp; &nbsp;6 &nbsp; 0.00000 &nbsp; &nbsp; &nbsp; &nbsp; 0.00000
+&nbsp; &nbsp; &nbsp;0.00000 &nbsp; &nbsp; &nbsp; &nbsp; 0.300
+&nbsp; &nbsp; 3.150 &nbsp; 0.10844<BR>
+ &nbsp; &nbsp;1 &nbsp; 0.91213 &nbsp; &nbsp; &nbsp; &nbsp; 0.00000
+&nbsp; &nbsp; -0.59676 &nbsp; &nbsp; &nbsp; &nbsp; 0.075 &nbsp; &nbsp; 2.170
+&nbsp; 0.01985<BR>
+ &nbsp; &nbsp;1 &nbsp;-0.91213 &nbsp; &nbsp; &nbsp; &nbsp; 0.00000
+&nbsp; &nbsp; -0.59676 &nbsp; &nbsp; &nbsp; &nbsp; 0.075 &nbsp;
+&nbsp; 2.170 &nbsp; 0.01985<BR>
+ &nbsp; &nbsp;9 &nbsp; 0.00000 &nbsp; &nbsp; &nbsp; &nbsp;
+1.10464 &nbsp; &nbsp; &nbsp;0.79333 &nbsp; &nbsp; &nbsp; &nbsp;-0.225
+&nbsp; &nbsp; 2.975 &nbsp; 0.07944<BR>
+ &nbsp; &nbsp;9 &nbsp; 0.00000 &nbsp; &nbsp; &nbsp; &nbsp;-1.10464
+&nbsp; &nbsp; &nbsp;0.79333 &nbsp; &nbsp; &nbsp; &nbsp;-0.225
+&nbsp; &nbsp; 2.975 &nbsp; 0.07944
+<LI><A HREF="#I8"><b>nmcmax</b>, <b>nmcrep</b>, <b>nrecd</b>, <b>nmcvch</b>, <b>nmccnt</b>
+</A><BR>
+ &nbsp;10000000 &nbsp; &nbsp; 10000 &nbsp; &nbsp;100000
+&nbsp; &nbsp; &nbsp; 500 &nbsp; &nbsp;50000
+</OL>
+<p>
+<A NAME="V">V.</A> <u>File formats</u>
+<p>
+<UL>
+<LI>Unit 10: checkpoint file
+<UL>The checkpoint file is a binary file containig all the 
+variables of the program. It can only be read with a program that has been
+dimensioned to exactly the same size. It is written automatically at every
+<b>nrecd</b> step and at the end of each run.
+</UL>
+<LI>Unit 13: configuration file
+<p>
+The configuration file contains the description of both simulated systems.
+Depending on <b>iop(4)</b> it is either an ASCII file or a Fortran binary file.
+<p>
+<UL>
+<LI>When <b>iop</b>(4)=0, the file is in binary format, written by
+the following Fortran statements:
+<PRE>
+   if (iop(4) .eq. 0) then
+     write (13) nmolg,nmolr,ix,icopvg,volg,volr,
+-      ((crmg(k,im),k=1,3),im=1,nmolg),
+-      ((crmr(k,im),k=1,3),im=1,nmolr)
+
+     write (13)
+-      ((cg(k,ia,1),k=1,3),ia=1,natg,1),
+-      ((cr(k,ia,1),k=1,3),ia=1,natr)
+</PRE>
+<LI>When <b>iop</b>(4)=1, the file is ASCII format,
+containing the following records:
+<UL>
+<LI>nmolg,nmolr,ix,icopvg,volg,volr (2i6,i12,i2,2e15.7)
+<LI>((crmg(k,im),k=1,3),im=1,nmolg) (3f20.10)
+<LI>((crmr(k,im),k=1,3),im=1,nmolr) (3f20.10)
+<LI>((cg(k,ia,icopvg),k=1,3),ia=1,natg) (3f20.10)
+<LI>((cr(k,ia,icopvr),k=1,3),ia=1,natr) (3f20.10)
+</UL>
+</UL>
+Here
+<UL>
+<LI> nmolg,nmolr are the number of molecule in the G and R systems,
+<LI>ix is the current random number seed
+<LI>volg,volr are the volumes of the G and R systems
+<LI>crmg,crmr are the center of masses of the molecules in the G and R systems
+<LI>cg,cr are the atomic coordinates of the molecules in the G and R systems
+</UL>
+</UL>
+</UL>
+<p>
+<A NAME="VI">VI.</A> <u>References</u>
+<p>
+<UL>
+<A NAME="GE"></A>
+<LI>Original description of the Gibbs ensemble method:
+A.Z. Panagiotopoulos, Molec. Phys., <B>61</B>, p 813 (1987)
+<p>
+<A NAME="CBG"></A>
+<LI>Original description of the cavity-biased
+Gibbs ensemble method:
+M. Mezei, Molec. Simulation, <B>9</B>, pp 257-267 (1992)
+<BR>
+<p>
+<A NAME="CB"></A>
+<LI>Cavity-biased insertion - grid-based formalism:
+M. Mezei, Mol. Phys., <B>61</B>, 565-582
+(1987); Erratum,
+<B>67</B>,1207-1208 (1989).
+<p>
+<A NAME="KBMM"></A>
+<LI>Long-range correction for L-J fluids using a center of mass cutoff:
+M. Mezei, and K. Bencsath, J. Math. Chem.,
+<b>16</B>, 61-71 (1994). 
+<p>
+<A NAME="MEF2"></A>
+<LI>Phase equilibria of methylene fluoride:
+P. Jedlovszky, and M. Mezei, J. Chem., Phys., in print
+<b></B> (1999). 
+</UL>
+<p>
+</BODY>
+</HTML>
